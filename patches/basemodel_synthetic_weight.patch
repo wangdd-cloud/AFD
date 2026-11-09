@@ -1,0 +1,16 @@
+diff --git a/model/basemodel.py b/model/basemodel.py
+index ba03769..a75bfeb 100644
+--- a/model/basemodel.py
++++ b/model/basemodel.py
+@@ -327,6 +327,11 @@ class BaseModel(nn.Module):
+         loss_per_sample_train = self.loss_fn(pos_score, neg_score, reduce=False)
+         
+         weights = torch.ones_like(loss_per_sample_train)
++        synth_w = float(self.config.get('synthetic_weight', 1.0))
++        real_num_users = self.config.get('real_num_users', None)
++        if synth_w != 1.0 and real_num_users is not None:
++            is_synth = (batch[self.fuid] >= real_num_users).unsqueeze(-1)
++            weights = torch.where(is_synth, torch.tensor(synth_w, dtype=weights.dtype, device=weights.device), weights)
+ 
+         loss_per_sample = loss_per_sample_train * weights
+ 
